@@ -20,7 +20,12 @@ const int ledPin = 8; //LED on digital pin 8
 const int acsPin = A0; //ACS712 on analog pin 0
 
 int relayStatus = 0; //store value of relay here
-int acsValue = 0; //store value of current sensor here
+int acsValue = 0; //store raw value of current sensor here
+double acsVoltage = 0; //store voltage value
+double acsCurrent = 0; //store current value
+int sensitivity = 100; //100mV/A for 20A Sensor
+int offsetVoltage = 1650; //3.3V divided in half
+
 
 void setup(void)
 {
@@ -37,25 +42,24 @@ void loop(void){
   digitalWrite(ledPin, HIGH); //turn on led to show sensor node is turned ON
   network.update();                  // Check the network regularly
   acsValue = analogRead(acsPin);
-
+  acsVoltage = (acsValue / 1024.0) * 5000;
+  acsCurrent = ((acsVoltage - offsetVoltage) / sensitivity);
+  
   //=====RECEVING=====//
   while ( network.available() ) {     // Is there anything ready for us?
     RF24NetworkHeader header;        // If so, grab it and print it out
     int payload;
     network.read(header,&payload,sizeof(payload));
 
-    if(payload == 1)
+    // trigger the relay once a payload is received.
+    relayStatus = digitalRead(relayPin);
+    if(relayStatus == HIGH)
     {
-      // trigger the relay once a payload is received.
-      relayStatus = digitalRead(relayPin);
-      if(relayStatus == HIGH)
-      {
-        digitalWrite(relayPin, LOW);
-      }
-      else
-      {
-        digitalWrite(relayPin, HIGH);
-      }
+      digitalWrite(relayPin, LOW);
+    }
+    else
+    {
+      digitalWrite(relayPin, HIGH);
     }
   }
   
@@ -66,6 +70,10 @@ void loop(void){
     last_sent = now; //store current time in ms
     RF24NetworkHeader header1(otherNode); //(what node to sent to)
     bool ok = network.write(header1, &acsValue, sizeof(acsValue));
+    bool ok1 = network.write(header1, &acsVoltage, sizeof(acsVoltage));
+    bool ok2 = network.write(header1, &acsCurrent, sizeof(acsCurrent));
+    bool ok3 = network.write(header1, &relayStatus, sizeof(relayStatus));
   }
+  
+  delay(3000);
 }
-
