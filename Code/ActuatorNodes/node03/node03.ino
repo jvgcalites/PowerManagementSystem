@@ -4,8 +4,8 @@
 #include <SPI.h>
 
 // ADDRESSES
-const uint16_t thisNode = 00; // Address of our actuator node in Octal format
-const uint16_t otherNode = 02; // Address of base node
+const uint16_t thisNode = 03; // Address of our actuator node in Octal format
+const uint16_t otherNode = 00; // Address of base node
 
 // OBJECTS
 RF24 radio(9, 10); //create object to control and communicate with nRF24L01
@@ -18,9 +18,17 @@ const int acsPin = A0; //ACS712 on analog pin 0
 
 // INITIALIZE VARIABLES
 int relayStatus = 0; //store value of relay here
-int acsValue = 0; //store value of current sensor here
 bool justTurnedOn = true;
+
+// Variables used for ACS712 Current Sensor
+int acsValue = 0; //store value of current sensor here
 int acsLimit = 10; //used for determining whether the device is on or off.
+const float VCC = 5.0; // supply voltage is from 4.5 to 5.5V. Normally 5V
+float cutOffLimit = 0.001; //set the current which bellow that value. 
+float sensitivity = 0.100; // set for ACS712 20A
+const float QOV = 0.5 *VCC;
+float voltage; //internal variable for voltage.
+
 
 void setup(void)
 {
@@ -53,7 +61,7 @@ void loop(void){
     RF24NetworkHeader header;        // If so, grab it and print it out
     int payload = 0;
     network.read(header,&payload,sizeof(payload));
-    Serial.println(payload);
+
     if(payload == 1) // actuator node is triggered using remote node
     {
       // trigger the relay once a payload is received.
@@ -61,12 +69,10 @@ void loop(void){
       if(relayStatus == HIGH)
       {
         digitalWrite(relayPin, LOW);
-        Serial.println("relaystat is high");
       }
       else
       {
         digitalWrite(relayPin, HIGH);
-        Serial.println("relaystat is low");
       }
       
     }
@@ -75,7 +81,15 @@ void loop(void){
     {
       //check if there is current flowing through the current sensor
       acsValue = analogRead(acsPin);
-      if(acsValue > acsLimit) // If there is current flowing, the device is turned on. Thus, trigger the relay.
+      float rawVoltage = (5.0/1023.0)*acsValue; //read the voltage from sensor
+      voltage = rawVoltage - QOV + 0.012; //0.000 is a value to make voltage zero when there is no current
+      float current = voltage / sensitivity;
+
+      //send the current reading to the base node 
+      RF24NetworkHeader header1(otherNode); // (what node to sent to)
+      bool ok = network.write(header1, &current, sizeof(current));
+      
+      if(current > cutOffLimit) // If there is current flowing, the device is turned on. Thus, trigger the relay.
       {
         relayStatus = digitalRead(relayPin);
         if(relayStatus == HIGH)

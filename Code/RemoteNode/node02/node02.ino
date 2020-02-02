@@ -5,7 +5,7 @@
 
 // ADDRESSES
 const uint16_t thisNode = 02; // Address of our remote node in Octal format
-const uint16_t node03 = 00; // Address of actuator node
+const uint16_t node03 = 03; // Address of actuator node
 
 // GLOBAL VARIABLES
 RF24 radio(9, 10); //create object to control and communicate with nRF24L01
@@ -68,6 +68,8 @@ void loop() {
   {
     payload = 1;
   }
+  
+  delay(1000);
 }
 
 void blinkLed()
