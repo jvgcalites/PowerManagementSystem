@@ -3,8 +3,10 @@
 #include <RF24.h> //Library for nRF24L01
 #include <SPI.h> //nRF24L01 uses SPI communication
 
-// ADDRESSES
+// ADDRESS OF THE NODE
 const uint16_t thisNode = 00; // Address of our node in Octal format
+
+// ADDRESSES OF THE NODES TO SENT TO
 const uint16_t node03 = 03; // Address of actuator node
 
 // GLOBAL VARIABLES
@@ -21,11 +23,14 @@ unsigned long sn1_idleTime; //store the idle time of sensor node 1
 int sensorNode011 = 0;
 unsigned long sn2_previousMillis;
 unsigned long sn2_idleTime;
+int sensorNode021 = 0;
+unsigned long sn3_previousMillis;
+unsigned long sn3_idleTime;
 
 
 void setup() {
   Serial.begin(115200);
-  Serial.println("RF24Network/examples/helloworld_rx/");
+  Serial.println("START");
   
   SPI.begin(); //start SPI communication
   radio.begin(); //start nRF24L01 communication and control
@@ -82,6 +87,43 @@ void loop() {
       sn2_idleTime = updateIdleTime(currentMillis, sn2_previousMillis);
     }
     //========================================================================//
+
+    //===========================FROM SENSOR NODE 3===========================//
+    if(header.from_node == 021) //if received data is from sensor node 1
+    {
+      sensorNode021 = incomingData;
+      if(incomingData == 0) //check if received data is no motion
+      {
+        sn3_idleTime = updateIdleTime(currentMillis, sn2_previousMillis);
+      }
+      else //if received data is 1
+      {
+        sn3_previousMillis = currentMillis;
+        sn3_idleTime = updateIdleTime(currentMillis, sn3_previousMillis);
+      }
+    }
+    else // if received data is from other node
+    {
+      sn3_idleTime = updateIdleTime(currentMillis, sn3_previousMillis);
+    }
+    //========================================================================//
+
+
+    //===========================FROM REMOTE NODE 1===========================//
+    if(header.from_node == 02) //if received data is from remote node.
+    {
+      sensorNode01 = incomingData;
+      Serial.println(incomingData);
+    }
+    //========================================================================//
+
+    //===========================FROM ACTUATOR NODE 1===========================//
+    if(header.from_node == 03) //if received data is from remote node.
+    {
+      sensorNode01 = incomingData;
+      Serial.println(incomingData);
+    }
+    //========================================================================//
   }
   else // if there is no data received from the sensor nodes, update the idle time depending on the previous status
   {
@@ -108,12 +150,26 @@ void loop() {
       sn2_idleTime = updateIdleTime(currentMillis, sn2_previousMillis);
     }
     //====================================================================//
+
+    //=========================== SENSOR NODE 3===========================//
+    if(sensorNode021 == 0) //check if latest received data is no motion
+    {
+      sn3_idleTime = updateIdleTime(currentMillis, sn3_previousMillis);
+    }
+    else //if received data is 1
+    {
+      sn3_previousMillis = currentMillis;
+      sn3_idleTime = updateIdleTime(currentMillis, sn3_previousMillis);
+    }
+    //====================================================================//
   }
 
   printStatus("SN1", sn1_idleTime, sensorNode01);
   printStatus("SN2", sn2_idleTime, sensorNode011);
+  printStatus("SN3", sn3_idleTime, sensorNode021);
+  Serial.println("===================================");
   
-  if(sn1_idleTime > minIdleTime && sn2_idleTime > minIdleTime)
+  if(sn1_idleTime > minIdleTime && sn2_idleTime > minIdleTime && sn3_idleTime > minIdleTime)
   {
     //turn off devices automatically
     int payload = 2;
@@ -122,6 +178,7 @@ void loop() {
     
     sn1_previousMillis = currentMillis;
     sn2_previousMillis = currentMillis;
+    sn3_previousMillis = currentMillis;
   }
 
   delay(1000);

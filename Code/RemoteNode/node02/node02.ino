@@ -6,6 +6,7 @@
 // ADDRESSES
 const uint16_t thisNode = 02; // Address of our remote node in Octal format
 const uint16_t node03 = 03; // Address of actuator node
+const uint16_t node00 = 00; // Address of Base Node
 
 // GLOBAL VARIABLES
 RF24 radio(9, 10); //create object to control and communicate with nRF24L01
@@ -38,30 +39,40 @@ void loop() {
   {
     RF24NetworkHeader header(node03); //(what node to sent to)
     bool ok1 = network.write(header, &payload, sizeof(payload));
+    RF24NetworkHeader header1(node00); //(what node to sent to)
+    bool ok01 = network.write(header1, &payload, sizeof(payload));
     blinkLed();
   }
   else if(digitalRead(4) == LOW)
   {
     RF24NetworkHeader header(node03); //(what node to sent to)
     bool ok2 = network.write(header, &payload, sizeof(payload));
+    RF24NetworkHeader header1(node00); //(what node to sent to)
+    bool ok02 = network.write(header1, &payload, sizeof(payload));
     blinkLed();
   }
   else if(digitalRead(6) == LOW)
   {
     RF24NetworkHeader header(node03); //(what node to sent to)
     bool ok3 = network.write(header, &payload, sizeof(payload));
+    RF24NetworkHeader header1(node00); //(what node to sent to)
+    bool ok03 = network.write(header1, &payload, sizeof(payload));
     blinkLed();
   }
   else if(digitalRead(7) == LOW)
   {
     RF24NetworkHeader header(node03); //(what node to sent to)
     bool ok4 = network.write(header, &payload, sizeof(payload));
+    RF24NetworkHeader header1(node00); //(what node to sent to)
+    bool ok04 = network.write(header1, &payload, sizeof(payload));
     blinkLed();
   }
   else if(digitalRead(8) == LOW)
   {
     RF24NetworkHeader header(node03); //(what node to sent to)
     bool ok5 = network.write(header, &payload, sizeof(payload));
+    RF24NetworkHeader header1(node00); //(what node to sent to)
+    bool ok05 = network.write(header1, &payload, sizeof(payload));
     blinkLed();
   }
   else
