@@ -7,7 +7,7 @@
 const uint16_t thisNode = 03; // Address of our actuator node in Octal format
 const uint16_t otherNode = 00; // Address of base node
 
-// OBJECTS
+// NRF24L01
 RF24 radio(9, 10); //create object to control and communicate with nRF24L01
 RF24Network network(radio); //create object to use nRF24L01 in mesh network
 
