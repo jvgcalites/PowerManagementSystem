@@ -68,6 +68,7 @@ void hibernate(){
 }
 
 void loop() {
+  radio.powerDown();
   network.update(); //check the network regularly
 
   //check the previous status is different from the current status 
@@ -78,11 +79,15 @@ void loop() {
     
     //change the motion status
     previousState = currentState;
+
+    radio.powerUp();
     
     //send the motion status to the base node
     payload = currentState;
     RF24NetworkHeader header(otherNode); // (what node to sent to)
     bool ok = network.write(header, &payload, sizeof(payload));
+
+    radio.powerDown();
 
     //turn on the led for 1 second upon sending the motion status
     digitalWrite(ledPin, HIGH);
