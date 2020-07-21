@@ -3,13 +3,8 @@
 #include <RF24.h> //Library for nRF24L01
 #include <SPI.h> //nRF24L01 uses SPI communication
 
-// ADDRESS OF THE NODE
+// ADDRESS OF THIS NODE
 const uint16_t thisNode = 00; // Address of our node in Octal format
-
-// ADDRESSES OF THE NODES TO RECEIVE FROM
-const uint16_t sn1_addr = 013;
-const uint16_t sn2_addr = 023;
-const uint16_t sn3_addr = 033;
 
 // ADDRESSES OF THE NODES TO SENT TO
 const uint16_t node03 = 03; // Address of actuator node
@@ -25,12 +20,6 @@ int incomingData = 0; // initialize variable for incoming data
 int sensorNode01 = 0; //store the latest data received from sensor node 1
 unsigned long sn1_previousMillis; //store last time sensor node 1 sent 0;
 unsigned long sn1_idleTime; //store the idle time of sensor node 1
-int sensorNode011 = 0;
-unsigned long sn2_previousMillis;
-unsigned long sn2_idleTime;
-int sensorNode021 = 0;
-unsigned long sn3_previousMillis;
-unsigned long sn3_idleTime;
 
 
 void setup() {
@@ -54,7 +43,7 @@ void loop() {
     network.read(header, &incomingData, sizeof(incomingData)); //Read the incoming data
     
     //===========================FROM SENSOR NODE 1===========================//
-    if(header.from_node == sn1_addr) //if received data is from sensor node 1
+    if(header.from_node == 01) //if received data is from sensor node 1
     {
       sensorNode01 = incomingData;
       if(incomingData == 0) //check if received data is no motion
@@ -73,43 +62,20 @@ void loop() {
     }
     //========================================================================//
 
-    //===========================FROM SENSOR NODE 2===========================//
-    if(header.from_node == sn2_addr) //if received data is from sensor node 1
+
+    //===========================FROM REMOTE NODE 1===========================//
+    if(header.from_node == 02) //if received data is from remote node.
     {
-      sensorNode011 = incomingData;
-      if(incomingData == 0) //check if received data is no motion
-      {
-        sn2_idleTime = updateIdleTime(currentMillis, sn2_previousMillis);
-      }
-      else //if received data is 1
-      {
-        sn2_previousMillis = currentMillis;
-        sn2_idleTime = updateIdleTime(currentMillis, sn2_previousMillis);
-      }
-    }
-    else // if received data is from other node
-    {
-      sn2_idleTime = updateIdleTime(currentMillis, sn2_previousMillis);
+      sensorNode01 = incomingData;
+      Serial.println(incomingData);
     }
     //========================================================================//
 
-    //===========================FROM SENSOR NODE 3===========================//
-    if(header.from_node == sn3_addr) //if received data is from sensor node 1
+    //===========================FROM ACTUATOR NODE 1===========================//
+    if(header.from_node == 03) //if received data is from remote node.
     {
-      sensorNode021 = incomingData;
-      if(incomingData == 0) //check if received data is no motion
-      {
-        sn3_idleTime = updateIdleTime(currentMillis, sn2_previousMillis);
-      }
-      else //if received data is 1
-      {
-        sn3_previousMillis = currentMillis;
-        sn3_idleTime = updateIdleTime(currentMillis, sn3_previousMillis);
-      }
-    }
-    else // if received data is from other node
-    {
-      sn3_idleTime = updateIdleTime(currentMillis, sn3_previousMillis);
+      sensorNode01 = incomingData;
+      Serial.println(incomingData);
     }
     //========================================================================//
   }
