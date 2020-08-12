@@ -4,7 +4,7 @@
 #include <SPI.h>
 
 // ADDRESSES
-const uint16_t thisNode_addr = 03; // Address of our actuator node in Octal format
+const uint16_t thisNode_addr = 04; // Address of our actuator node in Octal format
 const uint16_t baseNode_addr = 00; // Address of base node
 
 // NRF24L01
@@ -108,7 +108,7 @@ float getVVP(){
     if(acsValue < minValue){
       minValue = acsValue;
     }
-  }                                   
+  }
   result = ((maxValue - minValue) * 5.0) / 1024;
   
   return result;
@@ -121,6 +121,4 @@ void blinkLed()
   delay(100);
   digitalWrite(ledPin, HIGH);
 }
-
-
 

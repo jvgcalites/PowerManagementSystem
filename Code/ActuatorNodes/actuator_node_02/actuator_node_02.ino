@@ -4,7 +4,7 @@
 #include <SPI.h>
 
 // ADDRESSES
-const uint16_t thisNode_addr = 03; // Address of our actuator node in Octal format
+const uint16_t thisNode_addr = 01; // Address of our actuator node in Octal format
 const uint16_t baseNode_addr = 00; // Address of base node
 
 // NRF24L01
@@ -121,6 +121,5 @@ void blinkLed()
   delay(100);
   digitalWrite(ledPin, HIGH);
 }
-
 
 
