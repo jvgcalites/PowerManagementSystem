@@ -15,7 +15,7 @@ const uint64_t rAddress[] = {
 const uint64_t wAddress[] = {   
                                 0xF0F0F0F0B1LL, // camera node
                                 0xF0F0F0F0B2LL, // remote node
-                                0xF0F0F0F0B3LL, // actuator node 1
+                                0xB00B1E50FFLL, // actuator node 1
                                 0xF0F0F0F0B4LL, // actuator node 2
                                 0xF0F0F0F0B5LL, // actuator node 3
                                 0xF0F0F0F0B6LL, // actuator node 4
@@ -32,14 +32,14 @@ int mVperAmp = 100; // use 185 for 10A Module, 100 for 20A Module, and 66 for 30
 double voltage = 0;
 double vRMS = 0;
 double ampsRMS = 0;
-double acsThresholdValue = 0.15; //used for determining whether the device is on or off.
+double acsThresholdValue = 0.16; //used for determining whether the device is on or off.
 
 // INITIALIZE VARIABLES
 int relayStatus = 0; //store value of relay here
 byte payload = 0;
 
-const long minIdleTime = 6000;
-unsigned long currentMillis;
+const long minIdleTime = 120000; // if room idle time reached 2 mins, ask the camera for verification
+unsigned long currentMillis; // time counter
 
 // --SENSOR NODE--
 int sn1 = 0; //store the latest data received from sensor node 1
@@ -84,12 +84,12 @@ void loop(void){
     byte gotByte = 0; //used to store payload from transmit module
   
     if (radio.available(&pipeNum)) {
-        Serial.println(pipeNum);
         // check which pipe the data came from
         if (pipeNum == 1){  // if data came from camera node
+            blinkLed();
             updateAllIdleTime(currentMillis);
 
-            radio.enableDynamicPayloads();
+            radio.enableDynamicPayloads(); // used to enable sending this kind of message
             // if camera responds, receive its message
             char receivedMessage[32] = {0};
             radio.read(receivedMessage, sizeof(receivedMessage));
@@ -100,13 +100,14 @@ void loop(void){
 
             // check the message content
             if(stringMessage == "YES"){
-                // reset all sensor node's the idle time
-                sn1_previousMillis = currentMillis;
-                sn2_previousMillis = currentMillis;
-                sn3_previousMillis = currentMillis;
-                sn4_previousMillis = currentMillis;
+//                // reset all sensor node's the idle time
+//                sn1_previousMillis = currentMillis;
+//                sn2_previousMillis = currentMillis;
+//                sn3_previousMillis = currentMillis;
+//                sn4_previousMillis = currentMillis;
             }
             if(stringMessage == "NO"){
+                Serial.println("Sending signal to all actuator nodes to turn off");
                 //turn off all actuator nodes
                 payload = 2;
                 sendData(3, payload); // actuator node 1
@@ -125,60 +126,52 @@ void loop(void){
                     relayStatus = digitalRead(relayPin);
                     if(relayStatus == HIGH){
                         digitalWrite(relayPin, LOW);
-                    }
-                    else{
+                    } else {
                         digitalWrite(relayPin, HIGH);
                     }
-                    blinkLed();
                 }
-
-                // reset all sensor node's the idle time
-                sn1_previousMillis = currentMillis;
-                sn2_previousMillis = currentMillis;
-                sn3_previousMillis = currentMillis;
-                sn4_previousMillis = currentMillis;
-
             }
-        }
-        else if (pipeNum == 2){ // if data came from remote node
+        } else if (pipeNum == 2){ // if data came from remote node
+            blinkLed();
             updateAllIdleTime(currentMillis);
             
             //read one byte of data and store it in gotByte variable
             radio.read( &gotByte, 1 );
 
+            Serial.print("Remote node sent :");
+            Serial.println(gotByte);
+
             payload = 1;
             if (gotByte == 1){
+                Serial.println("Sending signal to actuator node 1 to turn off");
                 sendData(3, payload); // actuator node 1
-            }
-            else if (gotByte == 2){
+            } else if (gotByte == 2){
+                Serial.println("Sending signal to actuator node 2 to turn off");
                 sendData(4, payload); // actuator node 2
-            }
-            else if (gotByte == 3){
+            } else if (gotByte == 3){
+                Serial.println("Sending signal to actuator node 3 to turn off");
                 sendData(5, payload); // actuator node 3
-            }
-            else if (gotByte == 4){
+            } else if (gotByte == 4){
+                Serial.println("Sending signal to actuator node 4 to turn off");
                 sendData(6, payload); // actuator node 4
-            }
-            else if (gotByte == 5){
+            } else if (gotByte == 5){
+                Serial.println("This actuator node will turn off");
                 // trigger the relay of this node.
                 relayStatus = digitalRead(relayPin);
                 if(relayStatus == HIGH){
                     digitalWrite(relayPin, LOW);
-                }
-                else {
+                } else {
                     digitalWrite(relayPin, HIGH);
                 }
-
-                blinkLed();
-            }
-            else {
+            } else {
                 // It should not reach here, in theory
             }
-
-        }
-        else if (pipeNum == 3){ // if data came from actuator node 1
+        } else if (pipeNum == 3){ // if data came from actuator node 1
             //read one byte of data and store it in gotByte variable
             radio.read( &gotByte, 1 );
+
+            Serial.print("Received: ");
+            Serial.println(gotByte);
 
             // possible contents of payload - 10, 11, 20, 21, 30, 31, 40, 41
             int sensorNodeId = gotByte / 10;
@@ -190,13 +183,11 @@ void loop(void){
                 sn1 = sensorNodeStatus;
                 if(sensorNodeStatus == 0){
                     sn1_idleTime = updateIdleTime(currentMillis, sn1_previousMillis);
-                }
-                else{ 
+                } else { 
                     sn1_previousMillis = currentMillis;
                     sn1_idleTime = updateIdleTime(currentMillis, sn1_previousMillis);
                 }
-            }
-            else { 
+            } else { 
                 sn1_idleTime = updateIdleTime(currentMillis, sn1_previousMillis);
             }
 
@@ -205,13 +196,11 @@ void loop(void){
                 sn2 = sensorNodeStatus;
                 if(sensorNodeStatus == 0){ 
                     sn2_idleTime = updateIdleTime(currentMillis, sn2_previousMillis);
-                }
-                else{ 
+                } else { 
                     sn2_previousMillis = currentMillis;
                     sn2_idleTime = updateIdleTime(currentMillis, sn2_previousMillis);
                 }
-            }
-            else { 
+            } else { 
                 sn2_idleTime = updateIdleTime(currentMillis, sn2_previousMillis);
             }
 
@@ -220,13 +209,11 @@ void loop(void){
                 sn3 = sensorNodeStatus;
                 if(sensorNodeStatus == 0){ 
                     sn3_idleTime = updateIdleTime(currentMillis, sn3_previousMillis);
-                }
-                else{ 
+                } else { 
                     sn3_previousMillis = currentMillis;
                     sn3_idleTime = updateIdleTime(currentMillis, sn3_previousMillis);
                 }
-            }
-            else { 
+            } else { 
                 sn3_idleTime = updateIdleTime(currentMillis, sn3_previousMillis);
             }
 
@@ -235,21 +222,17 @@ void loop(void){
                 sn4 = sensorNodeStatus;
                 if(sensorNodeStatus == 0){ 
                     sn4_idleTime = updateIdleTime(currentMillis, sn4_previousMillis);
-                }
-                else {
+                } else {
                     sn4_previousMillis = currentMillis;
                     sn4_idleTime = updateIdleTime(currentMillis, sn4_previousMillis);
                 }
-            }
-            else{ // if received data is from other node
+            } else{ // if received data is from other node
                 sn4_idleTime = updateIdleTime(currentMillis, sn4_previousMillis);
             } 
-        }
-        else {
+        } else {
             // It should not reach here, in theory
         }
-    }
-    else { // if no data is received, still update the idle time of the sensor nodes
+    } else { // if no data is received, still update the idle time of the sensor nodes
         updateAllIdleTime(currentMillis);
     }
 
@@ -257,7 +240,7 @@ void loop(void){
     printStatus("SN1", sn1_idleTime, sn1);
     printStatus("SN2", sn2_idleTime, sn2);
     printStatus("SN3", sn3_idleTime, sn3);
-    printStatus("SN4", sn3_idleTime, sn3);
+    printStatus("SN4", sn4_idleTime, sn4);
     
     if(sn1_idleTime > minIdleTime && sn2_idleTime > minIdleTime && sn3_idleTime > minIdleTime && sn4_idleTime > minIdleTime){
         // ask the camera if room is occupied
@@ -270,6 +253,12 @@ void loop(void){
         Serial.println(text);
         radio.disableDynamicPayloads();
         radio.startListening();
+
+        // reset all sensor node's the idle time
+        sn1_previousMillis = currentMillis;
+        sn2_previousMillis = currentMillis;
+        sn3_previousMillis = currentMillis;
+        sn4_previousMillis = currentMillis;
     }
 
     delay(1000);

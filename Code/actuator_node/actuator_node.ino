@@ -8,14 +8,14 @@ RF24 radio(9, 10); //create object to control and communicate with nRF24L01
 
 // READ PIPES ADDRESS (uncomment the one you need)
 
-// FOR ACTUATOR NODE 3
-const uint64_t rAddress = 0xF0F0F0F0B4LL;
+//// FOR ACTUATOR NODE 2
+//const uint64_t rAddress = 0xF0F0F0F0B4LL;
 
-// // FOR ACTUATOR NODE 4
-// const uint64_t rAddress = 0xF0F0F0F0B5LL;
+//// FOR ACTUATOR NODE 3
+//const uint64_t rAddress = 0xF0F0F0F0B5LL;
 
-// // FOR ACTUATOR NODE 5
-// const uint64_t rAddress = 0xF0F0F0F0B6LL;
+// FOR ACTUATOR NODE 4
+const uint64_t rAddress = 0xF0F0F0F0B6LL;
 
 // PIN CONNECTIONS
 const int relayPin = 4; //relay on digital pin 4
@@ -27,7 +27,7 @@ int mVperAmp = 100; // use 185 for 10A Module, 100 for 20A Module, and 66 for 30
 double voltage = 0;
 double vRMS = 0;
 double ampsRMS = 0;
-double acsThresholdValue = 0.18; //used for determining whether the device is on or off.
+double acsThresholdValue = 0.16; //used for determining whether the device is on or off.
 
 // INITIALIZE VARIABLES
 int relayStatus = 0; //store value of relay here
@@ -55,6 +55,7 @@ void loop(void){
     
     if(radio.available(&pipeNum)) {
         radio.read( &gotByte, 1 );
+        Serial.println(gotByte);
 
         // if actuator node is triggered using remote node
         if(gotByte == 1){
@@ -120,14 +121,6 @@ void blinkLed()
     digitalWrite(ledPin, LOW);
     delay(100);
     digitalWrite(ledPin, HIGH);
-}
-
-// This function sends data directly to the base node
-void sendData(byte payload){
-    radio.stopListening();
-    radio.openWritingPipe(wAddress); 
-    radio.write(&payload, 1);
-    radio.startListening();
 }
 
 

@@ -96,8 +96,6 @@ void loop() {
     else{
         // It should not reach here, in theory
     }
-
-    radio.powerDown();
     
     delay(500);
     hibernate(); // go to sleep - call sleeping function

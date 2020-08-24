@@ -8,7 +8,7 @@ RF24 radio(9, 10); //create object to control and communicate with nRF24L01
 
 // ADDRESSES
 const uint64_t rAddress[] = {
-                                0xF0F0F0F0B3LL, // base node
+                                0xB00B1E50FFLL, // base node
                                 0xB00B1E50C1LL, // sensor node 1
                                 0xB00B1E50C2LL, // sensor node 2
                                 0xB00B1E50C3LL, // sensor node 3
@@ -26,7 +26,7 @@ int mVperAmp = 100; // use 185 for 10A Module, 100 for 20A Module, and 66 for 30
 double voltage = 0;
 double vRMS = 0;
 double ampsRMS = 0;
-double acsThresholdValue = 0.15; //used for determining whether the device is on or off.
+double acsThresholdValue = 0.16; //used for determining whether the device is on or off.
 
 // INITIALIZE VARIABLES
 int relayStatus = 0; //store value of relay here
@@ -58,8 +58,10 @@ void loop(void){
     byte gotByte = 0; //used to store payload from transmit module
     
     if(radio.available(&pipeNum)) {
-        radio.read( &gotByte, 1 );
-
+        radio.read(&gotByte, 1);
+        Serial.print(gotByte);
+        Serial.print(" , PipeNum : ");
+        Serial.println(pipeNum);
         // if the data came from the base node
         if (pipeNum == 5){
             // if actuator node is triggered using remote node
@@ -68,12 +70,9 @@ void loop(void){
                 relayStatus = digitalRead(relayPin);
                 if(relayStatus == HIGH){
                     digitalWrite(relayPin, LOW);
-                }
-                else {
+                } else {
                     digitalWrite(relayPin, HIGH);
                 }
-
-                blinkLed();
             }
 
             // if actuator node is triggered using sensor node
@@ -88,11 +87,9 @@ void loop(void){
                     relayStatus = digitalRead(relayPin);
                     if(relayStatus == HIGH){
                         digitalWrite(relayPin, LOW);
-                    }
-                    else {
+                    } else {
                         digitalWrite(relayPin, HIGH);
                     }
-                    blinkLed();
                 }
             }
         }
@@ -105,10 +102,10 @@ void loop(void){
             radio.stopListening();
             radio.write(&data, 1);
             radio.startListening();
-
-            // indicate that the data has been sent
-            blinkLed();
         }
+
+        // blink LED after every successful transmission
+        blinkLed();
     }
 }
 

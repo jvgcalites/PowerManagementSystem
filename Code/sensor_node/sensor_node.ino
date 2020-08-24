@@ -7,17 +7,17 @@
 
 // WRITE ADDRESSES TO ACTUATOR NODE(uncomment the one you need)
 
-// FOR SENSOR NODE 1
-const uint64_t wAddress = 0xB00B1E50C1LL; 
+//// FOR SENSOR NODE 1
+//const uint64_t wAddress = 0xB00B1E50C1LL; 
 
-// // FOR SENSOR NODE 2
-// const uint64_t wAddress = 0xB00B1E50C2LL; 
+//// FOR SENSOR NODE 2
+//const uint64_t wAddress = 0xB00B1E50C2LL; 
 
-// // FOR SENSOR NODE 3
-// const uint64_t wAddress = 0xB00B1E50C3LL; 
+// FOR SENSOR NODE 3
+const uint64_t wAddress = 0xB00B1E50C3LL; 
 
-// // FOR SENSOR NODE 4
-// const uint64_t wAddress = 0xB00B1E50C4LL; 
+//// FOR SENSOR NODE 4
+//const uint64_t wAddress = 0xB00B1E50C4LL; 
 
 
 // NRF24L01 
@@ -30,8 +30,8 @@ const int ledPin = 8; //LED on digital pin 8
 const int PCINT_DCPIN4 = 20; // Assigned PCINT for PD4 
 
 // INTERRUPT STATUS
-volatile int previousState = 1;
-volatile int currentState = 0; 
+volatile int previousState;
+volatile int currentState; 
 
 
 void setup() {
@@ -47,32 +47,18 @@ void setup() {
     pinMode(sensorPin, INPUT); // set digital pin 4 as input PIR Sensor
 
     // LED blinks until PIR sensor is stabilized
-    for( int i = 1; i <= 30; i++){  
+    for( int i = 1; i <= 120; i++){  
         digitalWrite(ledPin, HIGH); 
         delay(100);         
         digitalWrite(ledPin, LOW); 
         delay(100); 
     }
+
+    // Get the initial states
+    currentState = digitalRead(sensorPin);
+    previousState = currentState;
+
 }
-
-
-void wakeUpNow(){
-    // change motion sensor state from ON to OFF and vice versa.
-    currentState = !previousState;
-}
-
-
-void hibernate(){
-    set_sleep_mode(SLEEP_MODE_PWR_DOWN); // lowest power consumption mode
-    ADCSRA &= ~(1 << 7); // disable ADC
-    sleep_enable();
-    sleep_bod_disable();
-    attachPCINT(20, wakeUpNow, CHANGE);
-    sleep_mode();
-    sleep_disable();
-    //detachPCINT(PCINT_DCPIN4);
-}
-
 
 void loop() {
 
@@ -97,4 +83,22 @@ void loop() {
     delay(50);
     hibernate(); // go to sleep - call sleeping function
 }
+
+void wakeUpNow(){
+    // change motion sensor state from ON to OFF and vice versa.
+    currentState = !previousState;
+}
+
+
+void hibernate(){
+    set_sleep_mode(SLEEP_MODE_PWR_DOWN); // lowest power consumption mode
+    ADCSRA &= ~(1 << 7); // disable ADC
+    sleep_enable();
+    sleep_bod_disable();
+    attachPCINT(20, wakeUpNow, CHANGE);
+    sleep_mode();
+    sleep_disable();
+    //detachPCINT(PCINT_DCPIN4);
+}
+
 // END
