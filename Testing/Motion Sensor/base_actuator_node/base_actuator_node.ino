@@ -73,6 +73,18 @@ void setup(void){
 
     // set LED on
     digitalWrite(ledPin, HIGH);
+	
+	// ask the camera if room is occupied
+    // for some reason, the camera doesn't respond the first time it received a message
+    radio.stopListening();
+    radio.enableDynamicPayloads();
+    const char text[] = "Occupied?";
+    radio.openWritingPipe(wAddress[0]);
+    radio.write(text, sizeof(text));
+    Serial.print("To Camera: ");
+    Serial.println(text);
+    radio.disableDynamicPayloads();
+    radio.startListening();
 }
 
 void loop(void){
