@@ -101,6 +101,12 @@ void loop(void){
             String stringMessage(receivedMessage);
             radio.disableDynamicPayloads();
 
+            // reset all sensor node's the idle time
+            sn1_previousMillis = currentMillis;
+            sn2_previousMillis = currentMillis;
+            sn3_previousMillis = currentMillis;
+            sn4_previousMillis = currentMillis;
+
             // if the camera did not detect any human presence, the room is empty
             if(stringMessage == "NO"){
                 //turn off all actuator nodes
@@ -237,7 +243,7 @@ void loop(void){
         sn4_previousMillis = currentMillis;
     }
 
-    delay(100);
+    delay(200);
 }
 
 float getVVP(){

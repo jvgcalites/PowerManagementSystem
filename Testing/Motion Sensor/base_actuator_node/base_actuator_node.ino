@@ -38,7 +38,7 @@ double acsThresholdValue = 0.16; //used for determining whether the device is on
 int relayStatus = 0; //store value of relay here
 byte payload = 0;
 
-const long minIdleTime = 120000; // if room idle time reached 2 mins, ask the camera for verification
+const long minIdleTime = 60000; // if room idle time reached 2 mins, ask the camera for verification
 unsigned long currentMillis; // time counter
 
 // --SENSOR NODE--
