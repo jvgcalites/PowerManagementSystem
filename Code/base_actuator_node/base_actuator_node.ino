@@ -242,8 +242,6 @@ void loop(void){
         sn3_previousMillis = currentMillis;
         sn4_previousMillis = currentMillis;
     }
-
-    delay(200);
 }
 
 float getVVP(){
